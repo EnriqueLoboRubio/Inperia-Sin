@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QMessageBox, QGraphicsOpacityEffect
 )
 from PyQt5.QtGui import QIcon, QPixmap, QFont
-from PyQt5.QtCore import Qt, QSize, QSequentialAnimationGroup, QEasingCurve, QPropertyAnimation
+from PyQt5.QtCore import Qt, QSize, QParallelAnimationGroup, QEasingCurve, QPropertyAnimation
 from db.db import crear_bd, agregar_usuario, verificar_login, eliminar_usuario, encontrar_usuario
 import re
 
@@ -16,21 +16,24 @@ import re
 class VentanaLogin(QMainWindow):
 
     def __init__(self):
-        super().__init__()
-        self.setWindowTitle("INPERIA")
-        self.showMaximized() # maximizar la ventana
-        self.showFullScreen() # pantalla completa
-        self.setWindowIcon(QIcon("assets/icono_pest.ico"))
+        super().__init__()   
+        self.setup_window()
         self.initUI()
         self.tipo_pantalla = "usuario"
         self.intentos_fallidos = 0
+    
+    def setup_window(self):
+        #Configuración básica de la ventana
+        self.setWindowTitle("INPERIA")
+        self.setWindowIcon(QIcon("assets/icono_pest.ico"))
+        self.setMinimumSize(1200,700)
+        self.showMaximized()
 
     def initUI(self):        
         central = QWidget()
         self.setCentralWidget(central)
-
         layout_principal = QHBoxLayout()
-        central.setLayout(layout_principal)
+        central.setLayout(layout_principal)    
 
         #----Panel Izquierdo----
         self.izq = QLabel()
@@ -229,44 +232,67 @@ class VentanaLogin(QMainWindow):
         boton_usuario.clicked.connect(cambiar_usuario)  
    
     def animacion_cambio_panel(self, nuevo_pixmap, nuevo_texto):
+            
+            #Crear efectos de opacidad
             efecto_img = QGraphicsOpacityEffect()
             self.izq.setGraphicsEffect(efecto_img)
-            animacion_img = QPropertyAnimation(efecto_img, b"opacity")
-            animacion_img.setDuration(500)
-            animacion_img.setStartValue(1)
-            animacion_img.setEndValue(0)
-            animacion_img.setEasingCurve(QEasingCurve.InOutQuad)
 
             efecto_txt = QGraphicsOpacityEffect()
             self.texto_over.setGraphicsEffect(efecto_txt)
-            animacion_txt = QPropertyAnimation(efecto_txt, b"opacity")
-            animacion_txt.setDuration(500)
-            animacion_txt.setStartValue(1)
-            animacion_txt.setEndValue(0)
-            animacion_txt.setEasingCurve(QEasingCurve.InOutQuad)        
-            
-            self.izq.setPixmap(nuevo_pixmap)
-            self.texto_over.setText(nuevo_texto)
-        
-            def animar_aparicion():
-                animacion_img2 = QPropertyAnimation(efecto_img, b"opacity")
-                animacion_img2.setDuration(400)
-                animacion_img2.setStartValue(0)
-                animacion_img2.setEndValue(1)
-                animacion_img2.start()
 
-                animacion_txt2 = QPropertyAnimation(efecto_txt, b"opacity")
-                animacion_txt2.setDuration(400)
-                animacion_txt2.setStartValue(0)
-                animacion_txt2.setEndValue(1)
-                animacion_txt2.start()
-        
-            """grupo = QSequentialAnimationGroup
-            grupo.addAnimation(animacion_img)
-            grupo.addAnimation(animacion_txt)
-            grupo.finished.connect(actualizar_contenido)
-            grupo.finished.connect(animar_aparicion)
-            grupo.start()        """
+            #Animación desvacenimiento
+            animacion_salida_img = QPropertyAnimation(efecto_img, b"opacity")
+            animacion_salida_img.setDuration(300)
+            animacion_salida_img.setStartValue(1.0)
+            animacion_salida_img.setEndValue(0.0)
+            animacion_salida_img.setEasingCurve(QEasingCurve.InOutQuad)
+
+
+            animacion_salida_txt = QPropertyAnimation(efecto_txt, b"opacity")
+            animacion_salida_txt.setDuration(300)
+            animacion_salida_txt.setStartValue(1.0)
+            animacion_salida_txt.setEndValue(0.0)
+            animacion_salida_txt.setEasingCurve(QEasingCurve.InOutQuad)   
+
+            # Grupo de animaciones de salida
+            self.grupo_salida = QParallelAnimationGroup()
+            self.grupo_salida.addAnimation(animacion_salida_img)
+            self.grupo_salida.addAnimation(animacion_salida_txt)                 
+            
+            # Cuando termina la animación de salida, cambiar contenido y animar entrada
+            def cambiar_y_animar_entrada():
+                # Cambiar el contenido
+                self.izq.setPixmap(nuevo_pixmap)
+                self.texto_over.setText(nuevo_texto)
+                
+                # Animación de entrada
+                animacion_entrada_img = QPropertyAnimation(efecto_img, b"opacity")
+                animacion_entrada_img.setDuration(300)
+                animacion_entrada_img.setStartValue(0.0)
+                animacion_entrada_img.setEndValue(1.0)
+                animacion_entrada_img.setEasingCurve(QEasingCurve.InOutQuad)
+
+                animacion_entrada_txt = QPropertyAnimation(efecto_txt, b"opacity")
+                animacion_entrada_txt.setDuration(300)
+                animacion_entrada_txt.setStartValue(0.0)
+                animacion_entrada_txt.setEndValue(1.0)
+                animacion_entrada_txt.setEasingCurve(QEasingCurve.InOutQuad)
+                
+                # Grupo de animaciones de entrada
+                self.grupo_entrada = QParallelAnimationGroup()
+                self.grupo_entrada.addAnimation(animacion_entrada_img)
+                self.grupo_entrada.addAnimation(animacion_entrada_txt)
+                
+                # Limpiar efectos cuando termine la animación de entrada
+                def limpiar_efectos():
+                    self.izq.setGraphicsEffect(None)
+                    self.texto_over.setGraphicsEffect(None)
+                
+                self.grupo_entrada.finished.connect(limpiar_efectos)
+                self.grupo_entrada.start()
+            
+            self.grupo_salida.finished.connect(cambiar_y_animar_entrada)
+            self.grupo_salida.start()             
 
     def verificar_usuario(self):
 
