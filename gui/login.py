@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
-    QHBoxLayout, QVBoxLayout, QMessageBox, QGraphicsOpacityEffect
+    QHBoxLayout, QVBoxLayout, QMessageBox, QGraphicsOpacityEffect,
+    QApplication 
 )
 from PyQt5.QtGui import QIcon, QPixmap, QFont
-from PyQt5.QtCore import Qt, QSize, QParallelAnimationGroup, QEasingCurve, QPropertyAnimation
+from PyQt5.QtCore import Qt, QSize, QParallelAnimationGroup, QEasingCurve, QPropertyAnimation, QRect, QTimer
 from db.db import crear_bd, agregar_usuario, verificar_login, eliminar_usuario, encontrar_usuario
 import re
 
@@ -16,14 +17,16 @@ import re
 class VentanaLogin(QMainWindow):
 
     def __init__(self):
-        super().__init__()   
+        super().__init__()  
         self.setup_window()
+        self.ANIMATION_DURATION = 250 #duracion para animacion de deslizador
         self.initUI()
-        self.tipo_pantalla = "usuario"
+        self.tipo_pantalla = "usuario" #pantalla inicial
         self.intentos_fallidos = 0
-    
+        
+        QTimer.singleShot(0, self.ajustar_indicador_inicial) 
+
     def setup_window(self):
-        #Configuración básica de la ventana
         self.setWindowTitle("INPERIA")
         self.setWindowIcon(QIcon("assets/icono_pest.ico"))
         self.setMinimumSize(1200,700)
@@ -65,52 +68,56 @@ class VentanaLogin(QMainWindow):
 
         #----Panel Derecho----
         der = QWidget()
-        layout_der = QVBoxLayout()
-        layout_der.setAlignment(Qt.AlignCenter)
+        layout_der = QVBoxLayout()       
+        layout_der.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
         der.setLayout(layout_der)
 
-        # Tipo de usuario        
+        # Contenedor principal para los iconos
+        self.contenedor_botones_iconos = QWidget()
+        layout_iconos = QHBoxLayout()      
+        layout_iconos.addStretch() 
+        layout_iconos.addWidget(self.contenedor_botones_iconos)         
+        
+        layout_der.addLayout(layout_iconos)
+        layout_der.addSpacing(200) # Espacio entre los iconos y el formulario
+
+        TAM_BOTON = 70
+        ESPACIO = 30
+        ANCHURA = TAM_BOTON * 2 + ESPACIO
+        ALTURA = TAM_BOTON
+        self.contenedor_botones_iconos.setFixedSize(ANCHURA, ALTURA)
+
+        # Indicador Deslizante
+        self.indicador_deslizante = QWidget(self.contenedor_botones_iconos)
+        self.indicador_deslizante.setStyleSheet("background-color: rgba(128, 128, 128, 0.4); border-radius: 10px;")
+        self.indicador_deslizante.setFixedSize(TAM_BOTON, TAM_BOTON)
+        self.indicador_deslizante.lower() 
+
+        # Botones
         icono_usuario = QIcon("assets/usuario.png")
         icono_profesional = QIcon("assets/profesional.png")
         
-        boton_usuario = QPushButton()
-        boton_usuario.setIcon(icono_usuario)
-        boton_usuario.setIconSize(QSize(50, 50))
-        boton_usuario.setStyleSheet("""
-            QPushButton {
-                background-color: rgba(128, 128, 128, 0.4);
-                border: none;
-                border-radius: 10px;
-                padding: 10px;
-            }
-            QPushButton:hover {
-                background-color: rgba(128, 128, 128, 0.6);
-            }
-        """)   
-                  
-        boton_profesional = QPushButton()
-        boton_profesional.setIcon(icono_profesional)        
-        boton_profesional.setIconSize(QSize(50, 50))        
-        boton_profesional.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                border: none;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: rgba(128, 128, 128, 0.6);
-            }
+        self.boton_usuario = QPushButton(self.contenedor_botones_iconos)
+        self.boton_usuario.setIcon(icono_usuario)
+        self.boton_usuario.setIconSize(QSize(50, 50))
+        self.boton_usuario.setFixedSize(TAM_BOTON, TAM_BOTON)
+        self.boton_usuario.move(0, 0)
+        self.boton_usuario.setStyleSheet("""
+            QPushButton { background: transparent; border: none; padding: 10px; }
+            QPushButton:hover { background-color: rgba(128, 128, 128, 0.6); border-radius: 10px; }
+        """) 
+                
+        self.boton_profesional = QPushButton(self.contenedor_botones_iconos)
+        self.boton_profesional.setIcon(icono_profesional)          
+        self.boton_profesional.setIconSize(QSize(50, 50))          
+        self.boton_profesional.setFixedSize(TAM_BOTON, TAM_BOTON)
+        self.boton_profesional.move(TAM_BOTON + ESPACIO, 0) 
+        self.boton_profesional.setStyleSheet("""
+            QPushButton { background: transparent; border: none; padding: 10px; }
+            QPushButton:hover { background-color: rgba(128, 128, 128, 0.6); border-radius: 10px; }
         """)
 
-        iconos = QHBoxLayout()
-        iconos.addStretch()
-        iconos.addWidget(boton_usuario)
-        iconos.addSpacing(30)
-        iconos.addWidget(boton_profesional)
-        layout_der.addLayout(iconos)
-
         layout_der.setContentsMargins(1, 1, 1, 1)
-        layout_der.addStretch(1)
 
         # Campos de entrada
         self.input_correo = QLineEdit()
@@ -138,7 +145,7 @@ class VentanaLogin(QMainWindow):
         boton_entrar = QPushButton("Entrar")
         boton_entrar.setFont(QFont("Arial", 12))
         boton_entrar.setFixedHeight(50)
-        boton_entrar.setFixedWidth(200)        
+        boton_entrar.setFixedWidth(200)         
         boton_entrar.setStyleSheet("background-color: #222; color: white; border-radius: 8px;")
         boton_entrar.setCursor(Qt.PointingHandCursor)  
         boton_entrar.clicked.connect(self.verificar_usuario)      
@@ -156,81 +163,62 @@ class VentanaLogin(QMainWindow):
         contenedor_formulario.setLayout(formulario)
         contenedor_formulario.setMaximumWidth(1100)
         contenedor_formulario.setMinimumWidth(1050)
-        
-        layout_der.addWidget(contenedor_formulario, alignment=Qt.AlignVCenter | Qt.AlignHCenter)
-        layout_der.addStretch()
-        layout_der.addSpacing(300)
-        layout_der.setSizeConstraint(QVBoxLayout.SetMinimumSize)      
+            
+        layout_der.addWidget(contenedor_formulario, alignment=Qt.AlignHCenter)                
+        layout_der.addStretch(1) 
 
         layout_principal.addWidget(self.izq, 1)
         layout_principal.addWidget(der, 2)
         
-        # Cambio de tipo de usuario
-        def cambiar_profesional():
-            if self.tipo_pantalla != "profesional":
-                self.intentos_fallidos = 0
-                self.input_correo.clear()
-                self.input_contraseña.clear()            
-                self.tipo_pantalla = "profesional"            
-                self.animacion_cambio_panel(QPixmap("assets/inicio_profesional.jpg"), "INPERIA\nPROFESIONAL")
-                
-                # Cambiar estilos de los botones
-                boton_profesional.setStyleSheet("""
-                    QPushButton {
-                        background-color: rgba(128, 128, 128, 0.4);
-                        border: none;
-                        border-radius: 10px;
-                        padding: 10px;
-                    }
-                    QPushButton:hover {
-                        background-color: rgba(128, 128, 128, 0.6); 
-                    }
-                """)        
-                boton_usuario.setStyleSheet("""
-                    QPushButton {
-                        background: transparent;
-                        border: none;
-                        padding: 0px;
-                    }
-                    QPushButton:hover {
-                        background-color: rgba(128, 128, 128, 0.6);
-                    }
-                """)  
+        self.boton_profesional.clicked.connect(self.cambiar_profesional)
+        self.boton_usuario.clicked.connect(self.cambiar_usuario) 
 
-        def cambiar_usuario():   
-            if self.tipo_pantalla != "usuario":    
-                self.intentos_fallidos = 0
-                self.input_correo.clear()
-                self.input_contraseña.clear()
-                self.tipo_pantalla = "usuario"          
-                self.animacion_cambio_panel(QPixmap("assets/inicio_usuario.jpg"), "INPERIA\nUSUARIO")
+    def ajustar_indicador_inicial(self):
+        self.indicador_deslizante.setGeometry(self.boton_usuario.geometry())
+        self.indicador_deslizante.raise_()
+        self.indicador_deslizante.lower()
 
-                # Cambiar estilos de los botones
-                boton_usuario.setStyleSheet("""
-                    QPushButton {
-                        background-color: rgba(128, 128, 128, 0.4);
-                        border: none;
-                        border-radius: 10px;
-                        padding: 10px;
-                    }
-                    QPushButton:hover {
-                        background-color: rgba(128, 128, 128, 0.6); 
-                    }
-                """)        
-                boton_profesional.setStyleSheet("""
-                    QPushButton {
-                        background: transparent;
-                        border: none;
-                        padding: 0px;
-                    }
-                    QPushButton:hover {
-                        background-color: rgba(128, 128, 128, 0.6);
-                    }
-                """)          
+    def animar_indicador(self, boton_destino: QPushButton):
+        
+        destino_rect = boton_destino.geometry()
+        
+        self.animacion_indicador = QPropertyAnimation(self.indicador_deslizante, b"geometry")
+        self.animacion_indicador.setDuration(self.ANIMATION_DURATION)
+        self.animacion_indicador.setEndValue(QRect(destino_rect))
+        self.animacion_indicador.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animacion_indicador.start()
 
-        boton_profesional.clicked.connect(cambiar_profesional)
-        boton_usuario.clicked.connect(cambiar_usuario)  
-   
+    def actualizar_estilos_botones(self, es_usuario):
+        style_base = """
+            QPushButton { background: transparent; border: none; padding: 10px; }
+            QPushButton:hover { background-color: rgba(128, 128, 128, 0.6); border-radius: 10px; }
+        """
+        self.boton_usuario.setStyleSheet(style_base)
+        self.boton_profesional.setStyleSheet(style_base)
+
+
+    def cambiar_profesional(self):
+        if self.tipo_pantalla != "profesional":
+            self.intentos_fallidos = 0
+            self.input_correo.clear()
+            self.input_contraseña.clear()             
+            self.tipo_pantalla = "profesional"             
+            
+            self.animacion_cambio_panel(QPixmap("assets/inicio_profesional.jpg"), "INPERIA\nPROFESIONAL")
+            self.animar_indicador(self.boton_profesional)
+            self.actualizar_estilos_botones(es_usuario=False)
+            
+    def cambiar_usuario(self):  
+        if self.tipo_pantalla != "usuario":    
+            self.intentos_fallidos = 0
+            self.input_correo.clear()
+            self.input_contraseña.clear()
+            self.tipo_pantalla = "usuario"            
+            
+            self.animacion_cambio_panel(QPixmap("assets/inicio_usuario.jpg"), "INPERIA\nUSUARIO")
+            self.animar_indicador(self.boton_usuario)
+            self.actualizar_estilos_botones(es_usuario=True)
+
     def animacion_cambio_panel(self, nuevo_pixmap, nuevo_texto):
             
             #Crear efectos de opacidad
@@ -252,7 +240,7 @@ class VentanaLogin(QMainWindow):
             animacion_salida_txt.setDuration(300)
             animacion_salida_txt.setStartValue(1.0)
             animacion_salida_txt.setEndValue(0.0)
-            animacion_salida_txt.setEasingCurve(QEasingCurve.InOutQuad)   
+            animacion_salida_txt.setEasingCurve(QEasingCurve.InOutQuad)  
 
             # Grupo de animaciones de salida
             self.grupo_salida = QParallelAnimationGroup()
@@ -292,7 +280,7 @@ class VentanaLogin(QMainWindow):
                 self.grupo_entrada.start()
             
             self.grupo_salida.finished.connect(cambiar_y_animar_entrada)
-            self.grupo_salida.start()             
+            self.grupo_salida.start()         
 
     def verificar_usuario(self):
 
@@ -305,18 +293,18 @@ class VentanaLogin(QMainWindow):
         usuario = encontrar_usuario(correo)
         tipo_usuario = verificar_login(correo, contrasena)
 
-        #verificar campos rellenos
+        # verificar campos rellenos
         if not correo or not contrasena:
             QMessageBox.warning(self, "Error", "Por favor, completa todos los campos.")
             return
         
-        #verificar formato de correo y contraseña
+        # verificar formato de correo y contraseña
         if not validar_formato_correo(correo):
             QMessageBox.warning(self, "Error", "Formato del correo electrónico no válido")        
             return
         
         if usuario is not None:
-            if tipo_usuario is not None:              
+            if tipo_usuario is not None:           
                 if self.tipo_pantalla == tipo_usuario:
                     QMessageBox.information(self, "Inicio de sesión", f"Bienvenido, {tipo_usuario.capitalize()}")
 
@@ -331,9 +319,9 @@ class VentanaLogin(QMainWindow):
                         self.ventana_profesional.show()
                         self.close()
                 else:
-                    QMessageBox.warning(self, "Error", f"Tipo de usuario incorrecto.")            
-            else:        
-                QMessageBox.warning(self, "Error", f"Usuario o contraseña incorrectos. \n Tiene {3 - self.intentos_fallidos} intentos restantes.")                          
+                    QMessageBox.warning(self, "Error", f"Tipo de usuario incorrecto.")          
+            else:          
+                QMessageBox.warning(self, "Error", f"Usuario o contraseña incorrectos. \n Tiene {3 - self.intentos_fallidos - 1} intentos restantes.")          
                 self.intentos_fallidos += 1
             if self.intentos_fallidos >= 3:
                 QMessageBox.critical(self, "Cuenta suprimida", "Ha superado el número máximo de intentos. La cuenta ha sido elimnaada.\n Contacte con el administrador.")
@@ -346,4 +334,3 @@ class VentanaLogin(QMainWindow):
             self.input_correo.clear()
             self.input_contraseña.clear()
             self.intentos_fallidos = 0
-
