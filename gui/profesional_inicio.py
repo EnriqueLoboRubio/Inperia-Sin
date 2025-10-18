@@ -36,7 +36,7 @@ class VentanaProfesional(QMainWindow):
         # --- 1. Panel del Menú Lateral (Menú Hamburguesa) ---
         self.menu_frame = QWidget()
         self.menu_frame.setFixedWidth(self.MENU_WIDTH_CLOSED)
-        self.menu_frame.setStyleSheet("background-color: {color_menu}};")
+        self.menu_frame.setStyleSheet("background-color: transparent};")
         
         menu_layout = QVBoxLayout(self.menu_frame)
         menu_layout.setAlignment(Qt.AlignTop)
@@ -95,9 +95,11 @@ class VentanaProfesional(QMainWindow):
         start_width = self.MENU_WIDTH_OPEN if self.menu_abierto else self.MENU_WIDTH_CLOSED
         end_width = self.MENU_WIDTH_CLOSED if self.menu_abierto else self.MENU_WIDTH_OPEN
        
-        start_width = self.MENU_WIDTH_OPEN if self.menu_abierto else self.MENU_WIDTH_CLOSED
+        self.menu_abierto = not self.menu_abierto
 
-        
+        color_menu = self.COLOR_ABIERTO if self.menu_abierto else self.COLOR_CERRADO
+
+        self.menu_frame.setStyleSheet(f"background-color: {color_menu};")
         self.animation = QPropertyAnimation(self.menu_frame, b"minimumWidth")
         self.animation.setDuration(300)
         self.animation.setStartValue(start_width)
@@ -105,8 +107,7 @@ class VentanaProfesional(QMainWindow):
         self.animation.setEasingCurve(QEasingCurve.InOutQuad) # Suaviza la animación
         
         # Inicia la animación y actualiza el estado
-        self.animation.start()
-        self.menu_abierto = not self.menu_abierto
+        self.animation.start()        
         
         
     
