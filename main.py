@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QApplication
+from gui.usuario_inicio import VentanaUsuario
 from gui.profesional_inicio import VentanaProfesional
 import sys
 

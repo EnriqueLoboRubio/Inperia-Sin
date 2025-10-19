@@ -8,7 +8,7 @@ from PyQt5.QtGui import QFont, QIcon
 class VentanaProfesional(QMainWindow):
     
     # Ancho del menú cuando está cerrado y abierto
-    MENU_WIDTH_CLOSED = 70
+    MENU_WIDTH_CLOSED = 80
     MENU_WIDTH_OPEN = 450
     COLOR_ABIERTO = "#2B2A2A"
     COLOR_CERRADO = "transparent"
@@ -57,24 +57,82 @@ class VentanaProfesional(QMainWindow):
         """)
         self.boton_hamburguesa.clicked.connect(self.movimiento_menu)
         
-        menu_layout.addWidget(self.boton_hamburguesa, alignment=Qt.AlignCenter)
+        menu_layout.addWidget(self.boton_hamburguesa)
         menu_layout.addSpacing(20)
         
-        # Elementos del Menú
-        for text in ["Inicio", "Perfil", "Configuración", "Salir"]:
-            btn = QPushButton(text)
-            btn.setStyleSheet("color: white; border: none; padding: 10px; text-align: left;")
-            btn.setFont(QFont("Arial", 12))
-            menu_layout.addWidget(btn)
+        # --- Elementos del Menú (Recreando la imagen) ---
+        menu_options = [
+            "Estadísticas de entrevistas",
+            "Historial de entrevistas",
+            "Datos de internos",
+            "Modificar preguntas",
+            "Ajustes del modelo",
+            "Casos críticos"
+        ]
         
-        menu_layout.addStretch() # Empuja los elementos a la parte superior
+        # Lista de botones que no son el de Ajustes/Configuración del fondo
+        self.menu_buttons = []
+        
+        # Estilo base para los nuevos botones (simulando el efecto de la imagen)
+        button_style = """
+            QPushButton { 
+                color: white; 
+                border: 1px solid rgba(255, 255, 255, 0.4); 
+                padding: 10px 15px; 
+                text-align: left;
+                background-color: rgba(0, 0, 0, 0.2); 
+                border-radius: 15px;
+            }
+            QPushButton:hover { 
+                background-color: rgba(85, 85, 85, 0.5); 
+            }
+        """
+
+        # Crear y añadir los 6 botones principales
+        for text in menu_options:
+            btn = QPushButton(text)
+            btn.setStyleSheet(button_style)
+            btn.setFont(QFont("Arial", 10))
+            btn.hide() # Ocultar por defecto
+            self.menu_buttons.append(btn)
+            menu_layout.addWidget(btn)   
+        
+        menu_layout.addStretch(1) # Empuja los elementos a la parte superior
+
+# --- Botón de Ajustes (Abajo a la derecha) ---
+        
+        # Contenedor para el botón de ajustes para control de alineación
+        self.footer_menu_widget = QWidget()
+        self.footer_menu_layout = QHBoxLayout(self.footer_menu_widget)
+        self.footer_menu_layout.setContentsMargins(0, 0, 0, 0)
+        self.footer_menu_layout.setAlignment(Qt.AlignRight) # Alineación a la derecha
+        self.footer_menu_widget.hide() # Ocultar el widget contenedor por defecto
+
+        self.ajustes_button = QPushButton()
+        self.ajustes_button.setIcon(QIcon("assets/ajustes_icon.png"))
+        #self.ajustes_button.setIconSize(QSize(20, 20))
+        self.ajustes_button.setFixedSize(self.MENU_WIDTH_CLOSED - 10, self.MENU_WIDTH_CLOSED - 10) 
+        self.ajustes_button.setFont(QFont("Arial", 20))
+        self.ajustes_button.setStyleSheet("""
+            QPushButton { 
+                background-color: transparent; 
+                color: white; 
+                border: none;
+            }
+            QPushButton:hover { color: lightgray; }
+        """)
+        
+        self.footer_menu_layout.addWidget(self.ajustes_button)
+        menu_layout.addWidget(self.footer_menu_widget)        
 
         # --- 2. Contenido Principal ---
         content_widget = QWidget()
         content_widget.setStyleSheet("background-color: #F0F0F0;")
         content_layout = QVBoxLayout(content_widget)
 
-        texto_bienvenida = QLabel("Bienbenido, Nom Ape")
+        content_layout.addStretch(1)
+
+        texto_bienvenida = QLabel("Bienvenido, Nom Ape")
         texto_bienvenida.setFont(QFont("Arial", 18))
         content_layout.addWidget(texto_bienvenida, alignment=Qt.AlignCenter)        
         
@@ -82,7 +140,7 @@ class VentanaProfesional(QMainWindow):
         texto_entrevistas.setFont(QFont("Arial", 22))
         content_layout.addWidget(texto_entrevistas, alignment=Qt.AlignCenter)
 
-        content_layout.addStretch()
+        content_layout.addStretch(1)
 
 
         # Añadir widgets al layout principal
@@ -98,6 +156,19 @@ class VentanaProfesional(QMainWindow):
         self.menu_abierto = not self.menu_abierto
 
         color_menu = self.COLOR_ABIERTO if self.menu_abierto else self.COLOR_CERRADO
+
+        if self.menu_abierto:
+            # Mostrar botones con retardo para efecto escalonado
+            for i, btn in enumerate(self.menu_buttons):
+                QTimer.singleShot(i * 100, btn.show)  # Muestra cada botón con un retardo
+            self.footer_menu_widget.show()              
+        else:
+            # Ocultar botones inmediatamente
+            for btn in self.menu_buttons:
+                btn.hide()        
+
+            self.footer_menu_widget.hide()
+
 
         self.menu_frame.setStyleSheet(f"background-color: {color_menu};")
         self.animation = QPropertyAnimation(self.menu_frame, b"minimumWidth")
