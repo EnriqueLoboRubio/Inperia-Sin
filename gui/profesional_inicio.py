@@ -152,14 +152,15 @@ class VentanaProfesional(QMainWindow):
         self.pie_menu_widget.hide() 
 
         self.boton_ajustes = QPushButton() 
-        self.boton_ajustes.setFixedSize(self.MENU_ANCHURA_CERRADO - 10, self.MENU_ANCHURA_CERRADO - 10) 
+        self.boton_ajustes.setFixedSize(50,50) 
         self.boton_ajustes.setIcon(QIcon("assets/ajustes.png")) 
-        self.boton_ajustes.setIconSize(QSize(self.MENU_ANCHURA_CERRADO - 20, self.MENU_ANCHURA_CERRADO - 20))  # Ajusta el tamaño del icono
+        self.boton_ajustes.setIconSize(QSize(40,40)) 
         self.boton_ajustes.setStyleSheet("""
             QPushButton { 
                 background-color: transparent; 
                 color: white; 
                 border: none;
+                border-radius: 25px;
             }
             QPushButton:hover { background-color: rgba(85, 85, 85, 0.3); }
         """)
@@ -170,7 +171,30 @@ class VentanaProfesional(QMainWindow):
         # --- 2. Contenido Principal ---
         principal_widget = QWidget()
         principal_widget.setStyleSheet("background-color: #F0F0F0;")
-        principal_layout = QVBoxLayout(principal_widget)
+        principal_layout = QVBoxLayout(principal_widget)        
+
+        # Botón de Usuario (Arriba a la derecha)
+        self.usuario_widget = QWidget()
+        self.usuario_layout = QHBoxLayout(self.usuario_widget)
+        self.usuario_layout.setContentsMargins(0, 0, 10, 0)        
+
+        self.boton_usuario = QPushButton()
+        self.boton_usuario.setFixedSize(50, 50)
+        self.boton_usuario.setIcon(QIcon("assets/profesional.png"))
+        self.boton_usuario.setIconSize(QSize(40, 40))
+        self.boton_usuario.setStyleSheet("""
+            QPushButton { 
+                background-color: transparent;
+                border: none;
+                border-radius: 25px;
+            }
+            QPushButton:hover { background-color: rgba(85, 85, 85, 0.3); }
+        """)
+
+        # Añadir botón al layout de usuario
+        self.usuario_layout.addStretch(1)
+        self.usuario_layout.addWidget(self.boton_usuario)        
+        principal_layout.addWidget(self.usuario_widget)        
 
         principal_layout.addStretch(1)
 
@@ -192,24 +216,9 @@ class VentanaProfesional(QMainWindow):
         main_layout.addWidget(self.menu_frame)
         main_layout.addWidget(principal_widget)
 
-        # --- 3. Parte de usuario ---
+        # --- 3. Conexiones de botones ---
 
-        usuario_widget = QWidget()
-        usuario_layout = QHBoxLayout(usuario_widget)
-        usuario_layout.setContentsMargins(0, 0, 0, 0)
-        usuario_layout.setAlignment(Qt.AlignRight)
-
-        boton_usuario = QPushButton()
-        boton_usuario.setIcon(QIcon("assets/profesional.png"))
-        boton_usuario.setIconSize(QSize(40, 40))        
-
-        usuario_layout.addStretch(1)
-        usuario_layout.addWidget(boton_usuario)
-
-        principal_layout.addWidget(usuario_widget)
-
-        # --- 4. Conexiones de botones ---
-
+    # --- 4. Movimientos de Menú ---
     def movimiento_menu(self):   
         
         if self.menu_abierto:

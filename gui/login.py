@@ -9,7 +9,7 @@ from db.db import crear_bd, agregar_usuario, verificar_login, eliminar_usuario, 
 import re
 
 #crear_bd()
-#agregar_usuario("usuario1", "a@gmail.com", "1234", "usuario")
+agregar_usuario("usuario1", "a@gmail.com", "1234", "usuario")
 #agregar_usuario("profesional1", "b@gmail.com", "1234", "profesional")
 #agregar_usuario("1", "1", "1", "usuario")
 #agregar_usuario("2", "2", "2", "profesional")

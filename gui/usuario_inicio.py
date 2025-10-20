@@ -176,14 +176,15 @@ class VentanaUsuario(QMainWindow):
         self.pie_menu_widget.hide() 
 
         self.boton_ajustes = QPushButton() 
-        self.boton_ajustes.setFixedSize(self.MENU_ANCHURA_CERRADO - 10, self.MENU_ANCHURA_CERRADO - 10) 
+        self.boton_ajustes.setFixedSize(50,50) 
         self.boton_ajustes.setIcon(QIcon("assets/ajustes.png")) 
-        self.boton_ajustes.setIconSize(QSize(self.MENU_ANCHURA_CERRADO - 20, self.MENU_ANCHURA_CERRADO - 20))  # Ajusta el tamaño del icono
+        self.boton_ajustes.setIconSize(QSize(40,40))
         self.boton_ajustes.setStyleSheet("""
             QPushButton { 
                 background-color: transparent; 
                 color: white; 
                 border: none;
+                border-radius: 25px;
             }
             QPushButton:hover { background-color: rgba(85, 85, 85, 0.3); }
         """)
@@ -196,8 +197,30 @@ class VentanaUsuario(QMainWindow):
         principal_widget = QWidget()
         principal_layout = QVBoxLayout(principal_widget)
 
-        # Centrado vertical
-        principal_layout.addStretch(1) 
+        # Botón de Usuario (Arriba a la derecha)
+        self.usuario_widget = QWidget()
+        self.usuario_layout = QHBoxLayout(self.usuario_widget)
+        self.usuario_layout.setContentsMargins(0, 0, 10, 0)        
+
+        self.boton_usuario = QPushButton()
+        self.boton_usuario.setFixedSize(50, 50)
+        self.boton_usuario.setIcon(QIcon("assets/usuario.png"))
+        self.boton_usuario.setIconSize(QSize(40, 40))
+        self.boton_usuario.setStyleSheet("""
+            QPushButton { 
+                background-color: transparent;
+                border: none;
+                border-radius: 25px;
+            }
+            QPushButton:hover { background-color: rgba(85, 85, 85, 0.3); }
+        """)
+
+        # Añadir botón al layout de usuario
+        self.usuario_layout.addStretch(1)
+        self.usuario_layout.addWidget(self.boton_usuario)        
+        principal_layout.addWidget(self.usuario_widget)        
+
+        principal_layout.addStretch(1)
         
         titulo = QLabel("Bienvenido,  nombre apellido")
         titulo.setFont(QFont("Arial", 18))
@@ -213,15 +236,15 @@ class VentanaUsuario(QMainWindow):
         
         principal_layout.addStretch(1)
 
+        #Botón iniciar nueva entrevista
         boton_iniciar = QPushButton("Iniciar nueva entrevista")
-        boton_iniciar.setFont(QFont("Arial", 14))
-        #boton_iniciar.setFixedSize(250, 50)
+        boton_iniciar.setFont(QFont("Arial", 14))        
         boton_iniciar.setStyleSheet("""                                   
             QPushButton { 
                 color: white; 
                 border: 1px solid rgba(255, 255, 255, 0.4); 
                 padding: 10px 15px; 
-                text-align: left;
+                text-align: center;
                 background-color: black; 
                 border-radius: 15px;
             }
@@ -238,6 +261,9 @@ class VentanaUsuario(QMainWindow):
         main_layout.addWidget(self.menu_frame)
         main_layout.addWidget(principal_widget)
 
+        # --- 3. Conexiones de botones ---
+
+    # --- 4. Movimientos de Menú y Submenú ---    
     def movimiento_menu(self):           
         
         if self.menu_abierto:
