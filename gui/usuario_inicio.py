@@ -7,11 +7,16 @@ from PyQt5.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QTimer
 
 class VentanaUsuario(QMainWindow):
     
-    # Constantes para el menú
+    # Constantes para el menú principal
     MENU_ANCHURA_CERRADO = 70
     MENU_ANCHURA_ABIERTO = 250
     COLOR_ABIERTO = "#2B2A2A"
     COLOR_CERRADO = "transparent"
+
+    # Constantes para el menú de ajustes
+    AJUSTES_ANCHURA_CERRADO = 0
+    AJUSTES_ANCHURA_ABIERTO = 200
+    AJUSTES_MENU_COLOR = "#3C3C3C"
 
     def __init__(self):
         super().__init__()
@@ -20,6 +25,7 @@ class VentanaUsuario(QMainWindow):
         
         self.menu_abierto = False
         self.submenu_abierto = False # Estado del submenú de preguntas
+        self.ajustes_abierto = False
         
         self.initUI()
 
@@ -36,7 +42,7 @@ class VentanaUsuario(QMainWindow):
         main_layout = QHBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # --- 1. Panel del Menú Lateral ---
+        # ------------------- 1. Panel del Menú Lateral -------------------
         self.menu_frame = QWidget()
         self.menu_frame.setFixedWidth(self.MENU_ANCHURA_CERRADO)
         self.menu_frame.setStyleSheet(f"background-color: {self.COLOR_CERRADO};") 
@@ -192,8 +198,7 @@ class VentanaUsuario(QMainWindow):
         self.pie_menu_layout.addWidget(self.boton_ajustes)
         menu_layout.addWidget(self.pie_menu_widget)
 
-
-        # --- 2. Contenido Principal (Centrado Verticalmente) ---
+        # ------------------- 2. Contenido Principal (Centrado Verticalmente) -------------------
         principal_widget = QWidget()
         principal_layout = QVBoxLayout(principal_widget)
 
@@ -255,16 +260,61 @@ class VentanaUsuario(QMainWindow):
 
         principal_layout.addWidget(boton_iniciar, alignment=Qt.AlignCenter)
 
-        principal_layout.addStretch(2)
+        principal_layout.addStretch(2)    
 
-        # Añadir widgets al layout principal
-        main_layout.addWidget(self.menu_frame)
-        main_layout.addWidget(principal_widget)
+        # ------------------- 3. Menu de Ajustes (Panel Deslizante Derecha) -------------------
+        self.ajustes_menu_frame = QWidget()
+        self.ajustes_menu_frame.setFixedWidth(self.AJUSTES_ANCHURA_CERRADO)
+        self.ajustes_menu_frame.setStyleSheet(f"""
+            QWidget {{ background-color: {self.AJUSTES_MENU_COLOR}; border-left: 1px solid #1C1C1C; }}
+            QAbstractButton {{ color: white; border: none; padding: 10px; text-align: left; }}
+            QAbstractButton:hover {{ background-color: rgba(255, 255, 255, 0.2); }}
+        """)
+
+        self.ajustes_menu_layout = QVBoxLayout(self.ajustes_menu_frame)
+        self.ajustes_menu_layout.setContentsMargins(10, 20, 10, 10)
+        self.ajustes_menu_layout.setAlignment(Qt.AlignTop)
+
+        # Botones de Ajustes
+        self.boton_perfil = QPushButton("Perfil")
+        self.boton_perfil.setFont(QFont("Arial", 10))
+        self.boton_perfil.setStyleSheet(self.boton_estilo)  
+
+        self.boton_cambiar_idioma = QPushButton("Cambiar Idioma")
+        self.boton_cambiar_idioma.setFont(QFont("Arial", 10))
+        self.boton_cambiar_idioma.setToolTip("Próximamente disponible")
+        self.boton_cambiar_idioma.setStyleSheet(self.boton_estilo)
+
+        self.boton_cambiar_tema = QPushButton("Cambiar Tema")
+        self.boton_cambiar_tema.setFont(QFont("Arial", 10))
+        self.boton_cambiar_tema.setToolTip("Próximamente disponible")
+        self.boton_cambiar_tema.setStyleSheet(self.boton_estilo)
+
+        self.boton_cerrar_sesion = QPushButton("Cerrar Sesión")
+        self.boton_cerrar_sesion.setFont(QFont("Arial", 10))
+        self.boton_cerrar_sesion.setStyleSheet(self.boton_estilo)
+
+        # Añadir botones al layout de ajustes
+        self.ajustes_menu_layout.addWidget(self.boton_perfil)
+        self.ajustes_menu_layout.addWidget(self.boton_cambiar_idioma)
+        self.ajustes_menu_layout.addWidget(self.boton_cambiar_tema)
+        self.ajustes_menu_layout.addWidget(self.boton_cerrar_sesion)
+
+        # --- Añadir widgets al layout principal --- !!!!!
+        main_layout.addWidget(self.menu_frame)          # Añadir el menú lateral al layout principal        
+        main_layout.addWidget(principal_widget, 1)   # Añadir el contenido principal al layout principal
+        main_layout.addWidget(self.ajustes_menu_frame) # Añadir el menú de ajustes al layout principal 
+               
 
         # --- 3. Conexiones de botones ---
+        self.boton_ajustes.clicked.connect(self.movimiento_menu_ajustes)
 
     # --- 4. Movimientos de Menú y Submenú ---    
-    def movimiento_menu(self):           
+    def movimiento_menu(self):
+
+        if self.ajustes_abierto:
+            if self.ajustes_menu_frame.width() > self.AJUSTES_ANCHURA_CERRADO:
+                self.movimiento_menu_ajustes()  # Cerrar el menú de ajustes si está abierto           
         
         if self.menu_abierto:
             # Estado A CERRAR (Actual: Abierto)
@@ -331,3 +381,32 @@ class VentanaUsuario(QMainWindow):
             self.submenu_preguntas_widget.show()
             self.submenu_abierto = True
             self.boton_preguntas.setStyleSheet(self.boton_activo_estilo) # Activar estilo
+
+    def movimiento_menu_ajustes(self):
+
+        if self.menu_abierto:
+            self.movimiento_menu()  # Cerrar el menú principal si está abierto
+
+        if self.ajustes_abierto:
+            # Estado A CERRAR (Actual: Abierto)
+            anchura_final = self.AJUSTES_ANCHURA_CERRADO
+            self.ajustes_abierto = False
+        else:
+            # Estado A ABRIR (Actual: Cerrado)
+            anchura_final = self.AJUSTES_ANCHURA_ABIERTO
+            self.ajustes_abierto = True
+        
+        # Animación del ancho MÍNIMO y MÁXIMO
+        self.animacion_ajustes_min = QPropertyAnimation(self.ajustes_menu_frame, b"minimumWidth")
+        self.animacion_ajustes_min.setDuration(300)
+        self.animacion_ajustes_min.setStartValue(self.ajustes_menu_frame.width())
+        self.animacion_ajustes_min.setEndValue(anchura_final)
+        self.animacion_ajustes_min.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animacion_ajustes_min.start()
+        
+        self.animacion_ajustes_max = QPropertyAnimation(self.ajustes_menu_frame, b"maximumWidth")
+        self.animacion_ajustes_max.setDuration(300)
+        self.animacion_ajustes_max.setStartValue(self.ajustes_menu_frame.width())
+        self.animacion_ajustes_max.setEndValue(anchura_final)
+        self.animacion_ajustes_max.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animacion_ajustes_max.start()        
