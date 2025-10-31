@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel,
-    QApplication, QHBoxLayout
+    QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QStackedWidget
 )
 from PyQt5.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QTimer
 from PyQt5.QtGui import QFont, QIcon
+from gui.pantalla_bienvenida_profesional import PantallaBienvenida
+
 
 class VentanaProfesional(QMainWindow):
     
@@ -13,12 +14,19 @@ class VentanaProfesional(QMainWindow):
     COLOR_ABIERTO = "#2B2A2A"
     COLOR_CERRADO = "transparent"
 
+    # Constantes para el menú de ajustes
+    AJUSTES_ANCHURA_CERRADO = 0
+    AJUSTES_ANCHURA_ABIERTO = 200
+    AJUSTES_MENU_COLOR = "#3C3C3C"    
+
     def __init__(self):
         super().__init__()
         self.setup_window()
         self.setWindowTitle("INPERIA - Profesional")           
         
+        # Estados iniciales del menú y submenús
         self.menu_abierto = False
+        self.ajustes_abierto = False
 
         self.init_ui()
 
@@ -34,24 +42,20 @@ class VentanaProfesional(QMainWindow):
         # Layout principal horizontal (Menú Lateral + Contenido Principal)
         main_layout = QHBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0) # Quitar márgenes
+        main_layout.setSpacing(0)        
 
-        # --- 1. Panel del Menú Lateral---
+        # ------------------- 1. Panel del Menú Lateral -------------------
         self.menu_frame = QWidget()
         self.menu_frame.setFixedWidth(self.MENU_ANCHURA_CERRADO)
         self.menu_frame.setStyleSheet(f"background-color: {self.COLOR_CERRADO};") 
         
         menu_layout = QVBoxLayout(self.menu_frame)
         menu_layout.setAlignment(Qt.AlignTop)
-        menu_layout.setSpacing(10)
-
-        # Contenedor para el botón hamburguesa
-        self.cabecera_menu_widget = QWidget()
-        self.cabecera_menu_layout = QHBoxLayout(self.cabecera_menu_widget)
-        self.cabecera_menu_layout.setContentsMargins(0, 0, 0, 0)
-        self.cabecera_menu_layout.setSpacing(0)
+        menu_layout.setSpacing(10)      
         
         # Botón Hamburguesa
         self.boton_hamburguesa = QPushButton("☰")
+        self.boton_hamburguesa.setToolTip("Ver menú")
         self.boton_hamburguesa.setFixedSize(self.MENU_ANCHURA_CERRADO - 10, self.MENU_ANCHURA_CERRADO - 10)
         self.boton_hamburguesa.setFont(QFont("Arial", 20, QFont.Bold))
         self.boton_hamburguesa.setStyleSheet("""
@@ -63,13 +67,10 @@ class VentanaProfesional(QMainWindow):
             }
             QPushButton:hover { background-color: #555555; }
         """)
-        self.boton_hamburguesa.clicked.connect(self.movimiento_menu)
-
-        self.cabecera_menu_layout.addWidget(self.boton_hamburguesa)
-        self.cabecera_menu_layout.addSpacing(20)
+        
         
         menu_layout.addWidget(self.boton_hamburguesa)
-        menu_layout.addSpacing(20)
+        menu_layout.addSpacing(10)
 
         # --- Estilos de Botones ---
         
@@ -91,36 +92,42 @@ class VentanaProfesional(QMainWindow):
 
         # Botón Estadísticas
         self.boton_estadisticas = QPushButton("Estadísticas de entrevistas")
+        self.boton_estadisticas.setToolTip("Ver estadísticas de entrevistas realizadas")
         self.boton_estadisticas.setStyleSheet(self.boton_estilo)
         self.boton_estadisticas.setFont(QFont("Arial", 10))
         self.boton_estadisticas.hide() # Ocultar por defecto
 
         # Botón Historial
         self.boton_historial = QPushButton("Historial de entrevistas")
+        self.boton_historial.setToolTip("Ver el historial de entrevistas realizadas")
         self.boton_historial.setStyleSheet(self.boton_estilo)
         self.boton_historial.setFont(QFont("Arial", 10))
         self.boton_historial.hide()
 
         # Botón Datos
         self.boton_datos = QPushButton("Datos de internos")
+        self.boton_datos.setToolTip("Ver y gestionar datos de internos")
         self.boton_datos.setStyleSheet(self.boton_estilo)
         self.boton_datos.setFont(QFont("Arial", 10))
         self.boton_datos.hide()
 
         # Botón Modificar Preguntas
         self.boton_modificar = QPushButton("Modificar preguntas")
+        self.boton_modificar.setToolTip("Editar el cuestionario de entrevistas")
         self.boton_modificar.setStyleSheet(self.boton_estilo)
         self.boton_modificar.setFont(QFont("Arial", 10))
         self.boton_modificar.hide()
 
         # Botón Ajustes del Modelo
         self.boton_ajustes_modelo = QPushButton("Ajustes del modelo")
+        self.boton_ajustes_modelo.setToolTip("Configurar ajustes del modelo de IA")
         self.boton_ajustes_modelo.setStyleSheet(self.boton_estilo)
         self.boton_ajustes_modelo.setFont(QFont("Arial", 10))
         self.boton_ajustes_modelo.hide()
 
         # Botón Casos Críticos
         self.boton_casos_criticos = QPushButton("Casos críticos")
+        self.boton_casos_criticos.setToolTip("Ver casos críticos detectados")
         self.boton_casos_criticos.setStyleSheet(self.boton_estilo)
         self.boton_casos_criticos.setFont(QFont("Arial", 10))
         self.boton_casos_criticos.hide()   
@@ -152,6 +159,7 @@ class VentanaProfesional(QMainWindow):
         self.pie_menu_widget.hide() 
 
         self.boton_ajustes = QPushButton() 
+        self.boton_ajustes.setToolTip("Ver ajustes")
         self.boton_ajustes.setFixedSize(50,50) 
         self.boton_ajustes.setIcon(QIcon("assets/ajustes.png")) 
         self.boton_ajustes.setIconSize(QSize(40,40)) 
@@ -168,17 +176,14 @@ class VentanaProfesional(QMainWindow):
         self.pie_menu_layout.addWidget(self.boton_ajustes)
         menu_layout.addWidget(self.pie_menu_widget) 
 
-        # --- 2. Contenido Principal ---
-        principal_widget = QWidget()
-        principal_widget.setStyleSheet("background-color: #F0F0F0;")
-        principal_layout = QVBoxLayout(principal_widget)        
-
-        # Botón de Usuario (Arriba a la derecha)
+        # ------------------- 2. Contenido Principal -------------------
+        # BOTÓN DE USUARIO (Arriba a la derecha)
         self.usuario_widget = QWidget()
         self.usuario_layout = QHBoxLayout(self.usuario_widget)
         self.usuario_layout.setContentsMargins(0, 0, 10, 0)        
 
         self.boton_usuario = QPushButton()
+        self.boton_usuario.setToolTip("Perfil de usuario")
         self.boton_usuario.setFixedSize(50, 50)
         self.boton_usuario.setIcon(QIcon("assets/profesional.png"))
         self.boton_usuario.setIconSize(QSize(40, 40))
@@ -193,33 +198,94 @@ class VentanaProfesional(QMainWindow):
 
         # Añadir botón al layout de usuario
         self.usuario_layout.addStretch(1)
-        self.usuario_layout.addWidget(self.boton_usuario)        
-        principal_layout.addWidget(self.usuario_widget)        
+        self.usuario_layout.addWidget(self.boton_usuario)    
 
-        principal_layout.addStretch(1)
+        # PANTALLAS
+        self.stacked_widget = QStackedWidget()
 
-        titulo = QLabel("Bienvenido, Nom Ape")
-        titulo.setFont(QFont("Arial", 18))
-        titulo.setAlignment(Qt.AlignCenter)
-        principal_layout.addWidget(titulo)   
+        self.pantalla_bienvenida = PantallaBienvenida()        
 
-        principal_layout.addSpacing(50)     
-        
-        texto_entrevistas = QLabel("Se han completado _ entrevistas")
-        texto_entrevistas.setFont(QFont("Arial", 22))
-        texto_entrevistas.setAlignment(Qt.AlignCenter)
-        principal_layout.addWidget(texto_entrevistas)
+        self.stacked_widget.addWidget(self.pantalla_bienvenida)                                  
+        # Aquí se pueden añadir más pantallas al stacked_widget según sea necesario
 
-        principal_layout.addStretch(1)
+        self.stacked_widget.setCurrentWidget(self.pantalla_bienvenida)
 
-        # Añadir widgets al layout principal
-        main_layout.addWidget(self.menu_frame)
-        main_layout.addWidget(principal_widget)
+        # Contenedor central
+        self.central_widget = QWidget()
+        self.central_layout = QVBoxLayout(self.central_widget)
+        self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_layout.setSpacing(0)
 
-        # --- 3. Conexiones de botones ---
+        self.central_layout.addWidget(self.usuario_widget)
+        self.central_layout.addWidget(self.stacked_widget, 1)        
 
-    # --- 4. Movimientos de Menú ---
+# ------------------- 3. Menu de Ajustes (Panel Deslizante Derecha) -------------------
+        self.ajustes_menu_frame = QWidget()
+        self.ajustes_menu_frame.setFixedWidth(self.AJUSTES_ANCHURA_CERRADO)
+        self.ajustes_menu_frame.setStyleSheet(f"""
+            QWidget {{ background-color: {self.AJUSTES_MENU_COLOR}; border-left: 1px solid #1C1C1C; }}
+            QAbstractButton {{ color: white; border: none; padding: 10px; text-align: left; }}
+            QAbstractButton:hover {{ background-color: rgba(255, 255, 255, 0.2); }}
+        """)
+
+        self.ajustes_menu_layout = QVBoxLayout(self.ajustes_menu_frame)
+        self.ajustes_menu_layout.setContentsMargins(10, 20, 10, 10)
+        self.ajustes_menu_layout.setAlignment(Qt.AlignTop)
+
+        # Botones de Ajustes
+        self.boton_perfil = QPushButton("Perfil")
+        self.boton_perfil.setToolTip("Ver y editar perfil")
+        self.boton_perfil.setFont(QFont("Arial", 10))
+        self.boton_perfil.setStyleSheet(self.boton_estilo)  
+
+        self.boton_cambiar_idioma = QPushButton("Cambiar Idioma")
+        self.boton_cambiar_idioma.setToolTip("Cambiar el idioma de la aplicación")
+        self.boton_cambiar_idioma.setFont(QFont("Arial", 10))        
+        self.boton_cambiar_idioma.setStyleSheet(self.boton_estilo)
+
+        self.boton_cambiar_tema = QPushButton("Cambiar Tema")
+        self.boton_cambiar_tema.setToolTip("Cambiar el tema de la aplicación")
+        self.boton_cambiar_tema.setFont(QFont("Arial", 10))     
+        self.boton_cambiar_tema.setStyleSheet(self.boton_estilo)
+
+        self.boton_cerrar_sesion = QPushButton("Cerrar Sesión")
+        self.boton_cerrar_sesion.setToolTip("Cerrar sesión y volver a la pantalla de inicio")
+        self.boton_cerrar_sesion.setFont(QFont("Arial", 10))
+        self.boton_cerrar_sesion.setStyleSheet("""                                   
+            QPushButton { 
+                color: white; 
+                border: 1px solid rgba(255, 255, 255, 0.4); 
+                padding: 10px 15px; 
+                text-align: center;
+                background-color: "#AC1F20";
+                border-radius: 15px;
+            }
+            QPushButton:hover { 
+                background-color: "#F3292B"; 
+            }""")
+
+        # Añadir botones al layout de ajustes
+        self.ajustes_menu_layout.addWidget(self.boton_perfil)
+        self.ajustes_menu_layout.addWidget(self.boton_cambiar_idioma)
+        self.ajustes_menu_layout.addWidget(self.boton_cambiar_tema)
+        self.ajustes_menu_layout.addWidget(self.boton_cerrar_sesion)
+
+        # --- Añadir widgets al layout principal ---
+        main_layout.addWidget(self.menu_frame)          # Añadir el menú lateral al layout principal    
+        main_layout.addWidget(self.ajustes_menu_frame) # Añadir el menú de ajustes al layout principal     
+        main_layout.addWidget(self.central_widget, 1)   # Añadir el contenido principal al layout principal        
+               
+
+        # ------------------- 4. Conexiones de botones -------------------
+        self.boton_hamburguesa.clicked.connect(self.movimiento_menu)
+        self.boton_ajustes.clicked.connect(self.movimiento_menu_ajustes)
+
+    # ------------------- 5. Movimientos de Menú -------------------
     def movimiento_menu(self):   
+
+        if self.ajustes_abierto:
+            if self.ajustes_menu_frame.width() > self.AJUSTES_ANCHURA_CERRADO:
+                self.movimiento_menu_ajustes()  # Cerrar el menú de ajustes si está abierto           
         
         if self.menu_abierto:
             # Estado A CERRAR (Actual: Abierto)
@@ -230,10 +296,6 @@ class VentanaProfesional(QMainWindow):
             for widget in self.main_menu_widgets:
                 widget.hide()
             self.pie_menu_widget.hide()             
-
-            # Ajuste de alineación del botón hamburguesa: Insertar stretch a la izquierda
-            if self.cabecera_menu_layout.itemAt(0) is None or self.cabecera_menu_layout.itemAt(0).widget() is not None:
-                self.cabecera_menu_layout.insertStretch(0, 1)
             
         else:
             # Estado A ABRIR (Actual: Cerrado)
@@ -265,6 +327,32 @@ class VentanaProfesional(QMainWindow):
         self.animacion_max.setEndValue(anchura_final)
         self.animacion_max.setEasingCurve(QEasingCurve.InOutQuad)
         self.animacion_max.start()        
+
+    def movimiento_menu_ajustes(self):        
+
+        if self.ajustes_abierto:
+            # Estado A CERRAR (Actual: Abierto)
+            anchura_final = self.AJUSTES_ANCHURA_CERRADO
+            self.ajustes_abierto = False
+        else:
+            # Estado A ABRIR (Actual: Cerrado)
+            anchura_final = self.AJUSTES_ANCHURA_ABIERTO
+            self.ajustes_abierto = True
+        
+        # Animación del ancho MÍNIMO y MÁXIMO
+        self.animacion_ajustes_min = QPropertyAnimation(self.ajustes_menu_frame, b"minimumWidth")
+        self.animacion_ajustes_min.setDuration(300)
+        self.animacion_ajustes_min.setStartValue(self.ajustes_menu_frame.width())
+        self.animacion_ajustes_min.setEndValue(anchura_final)
+        self.animacion_ajustes_min.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animacion_ajustes_min.start()
+        
+        self.animacion_ajustes_max = QPropertyAnimation(self.ajustes_menu_frame, b"maximumWidth")
+        self.animacion_ajustes_max.setDuration(300)
+        self.animacion_ajustes_max.setStartValue(self.ajustes_menu_frame.width())
+        self.animacion_ajustes_max.setEndValue(anchura_final)
+        self.animacion_ajustes_max.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animacion_ajustes_max.start()                
         
         
     
