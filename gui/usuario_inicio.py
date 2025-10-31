@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel,
-    QHBoxLayout, QSizePolicy
+    QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QStackedWidget
 )
-from PyQt5.QtGui import QIcon, QPixmap, QFont
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QTimer
+from gui.pantalla_bienvenida_usuario import PantallaBienvenida
+from gui.pantalla_preguntas import PantallaPreguntas
 
 class VentanaUsuario(QMainWindow):
     
@@ -68,8 +69,6 @@ class VentanaUsuario(QMainWindow):
             }
             QPushButton:hover { background-color: #555555; }
         """)                                
-
-
         
         menu_layout.addWidget(self.boton_hamburguesa)
         menu_layout.addSpacing(10)
@@ -199,11 +198,9 @@ class VentanaUsuario(QMainWindow):
         self.pie_menu_layout.addWidget(self.boton_ajustes)
         menu_layout.addWidget(self.pie_menu_widget)
 
-        # ------------------- 2. Contenido Principal -------------------
-        principal_widget = QWidget()
-        principal_layout = QVBoxLayout(principal_widget)
+        # ------------------- 2. Contenido Principal -------------------   
 
-        # Botón de Usuario (Arriba a la derecha)
+        # BOTÓN DE USUARIO (Arriba a la derecha)
         self.usuario_widget = QWidget()
         self.usuario_layout = QHBoxLayout(self.usuario_widget)
         self.usuario_layout.setContentsMargins(0, 0, 10, 0)        
@@ -224,47 +221,30 @@ class VentanaUsuario(QMainWindow):
 
         # Añadir botón al layout de usuario
         self.usuario_layout.addStretch(1)
-        self.usuario_layout.addWidget(self.boton_usuario)        
-        principal_layout.addWidget(self.usuario_widget)        
+        self.usuario_layout.addWidget(self.boton_usuario)    
 
-        principal_layout.addStretch(1)
-        
-        titulo = QLabel("Bienvenido,  nombre apellido")
-        titulo.setFont(QFont("Arial", 18))
-        titulo.setAlignment(Qt.AlignCenter)
-        principal_layout.addWidget(titulo)
+        # PANTALLAS
+        self.stacked_widget = QStackedWidget()
 
-        principal_layout.addSpacing(50)
+        self.pantalla_bienvenida = PantallaBienvenida()
+        self.pantalla_preguntas = PantallaPreguntas()
 
-        contenido = QLabel("Ha completado _ preguntas")
-        contenido.setFont(QFont("Arial", 22))
-        contenido.setAlignment(Qt.AlignCenter)
-        principal_layout.addWidget(contenido)
-        
-        principal_layout.addStretch(1)
+        self.stacked_widget.addWidget(self.pantalla_bienvenida)                          
+        self.stacked_widget.addWidget(self.pantalla_preguntas)
+        # Aquí se pueden añadir más pantallas al stacked_widget según sea necesario
 
-        #Botón iniciar nueva entrevista
-        boton_iniciar = QPushButton("Iniciar nueva entrevista")
-        boton_iniciar.setToolTip("Comenzar una nueva entrevista")
-        boton_iniciar.setFont(QFont("Arial", 14))        
-        boton_iniciar.setStyleSheet("""                                   
-            QPushButton { 
-                color: white; 
-                border: 1px solid rgba(255, 255, 255, 0.4); 
-                padding: 10px 15px; 
-                text-align: center;
-                background-color: black; 
-                border-radius: 15px;
-            }
-            QPushButton:hover { 
-                background-color: rgba(71, 70, 70, 0.7); 
-            }
-        """)
+        # Establecer la pantalla inicial
+        self.stacked_widget.setCurrentWidget(self.pantalla_preguntas)
 
-        principal_layout.addWidget(boton_iniciar, alignment=Qt.AlignCenter)
+        # Contenedor central
+        self.central_widget = QWidget()
+        self.central_layout = QVBoxLayout(self.central_widget)
+        self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_layout.setSpacing(0)
 
-        principal_layout.addStretch(2)    
-
+        self.central_layout.addWidget(self.usuario_widget)
+        self.central_layout.addWidget(self.stacked_widget, 1)
+       
         # ------------------- 3. Menu de Ajustes (Panel Deslizante Derecha) -------------------
         self.ajustes_menu_frame = QWidget()
         self.ajustes_menu_frame.setFixedWidth(self.AJUSTES_ANCHURA_CERRADO)
@@ -318,13 +298,13 @@ class VentanaUsuario(QMainWindow):
 
         # --- Añadir widgets al layout principal ---
         main_layout.addWidget(self.menu_frame)          # Añadir el menú lateral al layout principal    
-        main_layout.addWidget(self.ajustes_menu_frame) # Añadir el menú de ajustes al layout principal     
-        main_layout.addWidget(principal_widget, 1)   # Añadir el contenido principal al layout principal        
+        main_layout.addWidget(self.ajustes_menu_frame) # Añadir el menú de ajustes al layout principal             
+        main_layout.addWidget(self.central_widget, 1)   # Añadir el contenido principal al layout principal        
                
-
         # ------------------- 4. Conexiones de botones -------------------
         self.boton_hamburguesa.clicked.connect(self.movimiento_menu)
         self.boton_ajustes.clicked.connect(self.movimiento_menu_ajustes)
+        self.botones_sub[0].clicked.connect(self.mostrar_pantalla_preguntas)
 
     # ------------------- 5. Movimientos de Menú y Submenú -------------------    
     def movimiento_menu(self):
@@ -420,3 +400,7 @@ class VentanaUsuario(QMainWindow):
         self.animacion_ajustes_max.setEndValue(anchura_final)
         self.animacion_ajustes_max.setEasingCurve(QEasingCurve.InOutQuad)
         self.animacion_ajustes_max.start()        
+
+    # ------------------- 6. Funciones para cambiar pantallas -------------------
+    def mostrar_pantalla_preguntas(self):
+        self.stacked_widget.setCurrentWidget(self.pantalla_preguntas)    

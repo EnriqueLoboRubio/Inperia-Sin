@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel,
-    QApplication, QHBoxLayout
+    QMainWindow, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QStackedWidget
 )
 from PyQt5.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QTimer
 from PyQt5.QtGui import QFont, QIcon
+from gui.pantalla_bienvenida_profesional import PantallaBienvenida
+
 
 class VentanaProfesional(QMainWindow):
     
@@ -175,18 +176,14 @@ class VentanaProfesional(QMainWindow):
         self.pie_menu_layout.addWidget(self.boton_ajustes)
         menu_layout.addWidget(self.pie_menu_widget) 
 
-         # ------------------- 2. Contenido Principal -------------------
-        principal_widget = QWidget()
-        principal_widget.setStyleSheet("background-color: #F0F0F0;")
-        principal_layout = QVBoxLayout(principal_widget)        
-
-        # Botón de Profesional (Arriba a la derecha)
+        # ------------------- 2. Contenido Principal -------------------
+        # BOTÓN DE USUARIO (Arriba a la derecha)
         self.usuario_widget = QWidget()
         self.usuario_layout = QHBoxLayout(self.usuario_widget)
         self.usuario_layout.setContentsMargins(0, 0, 10, 0)        
 
         self.boton_usuario = QPushButton()
-        self.boton_usuario.setToolTip("Perfil de profesional")
+        self.boton_usuario.setToolTip("Perfil de usuario")
         self.boton_usuario.setFixedSize(50, 50)
         self.boton_usuario.setIcon(QIcon("assets/profesional.png"))
         self.boton_usuario.setIconSize(QSize(40, 40))
@@ -201,24 +198,26 @@ class VentanaProfesional(QMainWindow):
 
         # Añadir botón al layout de usuario
         self.usuario_layout.addStretch(1)
-        self.usuario_layout.addWidget(self.boton_usuario)        
-        principal_layout.addWidget(self.usuario_widget)        
+        self.usuario_layout.addWidget(self.boton_usuario)    
 
-        principal_layout.addStretch(1)
+        # PANTALLAS
+        self.stacked_widget = QStackedWidget()
 
-        titulo = QLabel("Bienvenido, Nom Ape")
-        titulo.setFont(QFont("Arial", 18))
-        titulo.setAlignment(Qt.AlignCenter)
-        principal_layout.addWidget(titulo)   
+        self.pantalla_bienvenida = PantallaBienvenida()        
 
-        principal_layout.addSpacing(50)     
-        
-        texto_entrevistas = QLabel("Se han completado _ entrevistas")
-        texto_entrevistas.setFont(QFont("Arial", 22))
-        texto_entrevistas.setAlignment(Qt.AlignCenter)
-        principal_layout.addWidget(texto_entrevistas)
+        self.stacked_widget.addWidget(self.pantalla_bienvenida)                                  
+        # Aquí se pueden añadir más pantallas al stacked_widget según sea necesario
 
-        principal_layout.addStretch(1)
+        self.stacked_widget.setCurrentWidget(self.pantalla_bienvenida)
+
+        # Contenedor central
+        self.central_widget = QWidget()
+        self.central_layout = QVBoxLayout(self.central_widget)
+        self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_layout.setSpacing(0)
+
+        self.central_layout.addWidget(self.usuario_widget)
+        self.central_layout.addWidget(self.stacked_widget, 1)        
 
 # ------------------- 3. Menu de Ajustes (Panel Deslizante Derecha) -------------------
         self.ajustes_menu_frame = QWidget()
@@ -274,7 +273,7 @@ class VentanaProfesional(QMainWindow):
         # --- Añadir widgets al layout principal ---
         main_layout.addWidget(self.menu_frame)          # Añadir el menú lateral al layout principal    
         main_layout.addWidget(self.ajustes_menu_frame) # Añadir el menú de ajustes al layout principal     
-        main_layout.addWidget(principal_widget, 1)   # Añadir el contenido principal al layout principal        
+        main_layout.addWidget(self.central_widget, 1)   # Añadir el contenido principal al layout principal        
                
 
         # ------------------- 4. Conexiones de botones -------------------
