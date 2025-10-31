@@ -234,7 +234,7 @@ class VentanaUsuario(QMainWindow):
         # Aquí se pueden añadir más pantallas al stacked_widget según sea necesario
 
         # Establecer la pantalla inicial
-        self.stacked_widget.setCurrentWidget(self.pantalla_preguntas)
+        self.stacked_widget.setCurrentWidget(self.pantalla_bienvenida)
 
         # Contenedor central
         self.central_widget = QWidget()
@@ -305,6 +305,7 @@ class VentanaUsuario(QMainWindow):
         self.boton_hamburguesa.clicked.connect(self.movimiento_menu)
         self.boton_ajustes.clicked.connect(self.movimiento_menu_ajustes)
         self.botones_sub[0].clicked.connect(self.mostrar_pantalla_preguntas)
+        self.pantalla_bienvenida.boton_iniciar.clicked.connect(self.mostrar_pantalla_preguntas)
 
     # ------------------- 5. Movimientos de Menú y Submenú -------------------    
     def movimiento_menu(self):

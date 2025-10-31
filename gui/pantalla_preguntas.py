@@ -27,10 +27,10 @@ class PantallaPreguntas(QWidget):
         """)
 
         # Variable para el número de pregunta
-        numero_pregunta = 1
+        self.numero_pregunta = 1
         
         # Título de la pregunta
-        self.titulo_pregunta = QLabel("Pregunta "+ str(numero_pregunta) + " :")
+        self.titulo_pregunta = QLabel("Pregunta "+ str(self.numero_pregunta) + " :")
         self.titulo_pregunta.setFont(QFont("Arial", 18, QFont.Bold))
         self.titulo_pregunta.setAlignment(Qt.AlignLeft)
         self.pregunta_layout.addWidget(self.titulo_pregunta)
@@ -40,8 +40,22 @@ class PantallaPreguntas(QWidget):
         self.pregunta_layout.setSpacing(10)
         self.pregunta_layout.addWidget(self.titulo_pregunta)
 
-        # ------------------- 2. Texto con la pregunta ------------------- 
-        self.texto_pregunta = QLabel("""¿Usted reside en España? ¿Es usted tiene residencia legal o no?\n¿Tiene determinada la expulsión judicial de España?\n¿Tiene usted algún vínculo personal, familiar o profesional con personas españolas o residentes en España?\n¿Puede detallarlo?""")
+        # ------------------- 2. Texto con la pregunta -------------------
+        # Preguntas 
+        self.texto_pregunta_content = ["¿Usted reside en España? ¿Es usted tiene residencia legal o no?\n¿Tiene determinada la expulsión judicial de España?\n¿Tiene usted algún vínculo personal, familiar o profesional con personas españolas o residentes en España?\n¿Puede detallarlo?",
+                                  "¿Usted ha consumido drogas a lo largo de su vida? ¿Qué ha consumido?\n¿Cuándo se inició en dichos consumos?\n¿Ha participado usted en programas de deshabituación en los centros penitenciarios o en centros externos?\n¿Cuándo ha sido su último consumo? ¿Sigue consumiendo en la actualidad? ¿Ha tenido recaídas en consumos?",
+                                  "¿Por qué cometió los delitos que figuran en su expediente? ¿Fue algo puntual o ha reincidido en su vida?",
+                                  "¿Este es tu primer ingreso en prisión o has tenido otras condenas anteriormente?\n¿El cumplimiento de la condena actual es por delitos cometidos recientemente o\npor delitos cometidos hace tiempo y que estaban recurridos judicialmente?",
+                                  "¿En algún momento has intentado evitar el cumplimiento de una condena o fugarte? ¿Por qué?",
+                                  "¿Alguna vez has estado clasificado en primer grado o se te ha aplicado el artículo 10 de la LOGP?\n¿Qué recuerdas de esa etapa?",
+                                  "¿Has tenido acceso a permisos penitenciarios?\n¿Qué impacto han tenido o crees que tendrían en ti? ¿Has quebrantado algún permiso? ¿por qué?",
+                                  "¿Cómo describirías la relación con tu familia u otras personas cercanas desde que estás en prisión?\n¿Qué rol tienes en tu familia? ¿Recibes visitas o apoyo externo?\n¿Tu familia o amigos te ingresan dinero en tu cuenta de peculio?",
+                                  "¿Dónde te gustaría disfrutar del permiso en caso de ser concedido? ¿Por qué has elegido ese lugar?\nEn caso de no tener familiares o amigos que los acojan:\n¿tiene acogida por alguna ONG? ¿Cuál y dónde? ¿Te has comprometido al cumplimiento de las normas de acogida de dicha ONG?",
+                                  "¿Cómo es tu relación con otros internos y con el personal del centro? ¿Has vivido situaciones conflictivas? ¿Cuáles?\n¿Cómo es su cumplimiento de las normas de convivencia de su módulo?\n¿En qué actividades participas y qué destinos desempeñas en el módulo?"]
+        
+        self.lista_respuestas = [""] * 10  # Lista para almacenar las respuestas de las 10 preguntas
+
+        self.texto_pregunta = QLabel(self.texto_pregunta_content[self.numero_pregunta - 1])
         self.texto_pregunta.setFont(QFont("Arial", 14))
         self.texto_pregunta.setAlignment(Qt.AlignCenter)
 
@@ -104,7 +118,7 @@ class PantallaPreguntas(QWidget):
         
         self.botones_layout.addStretch(1)
 
-        #estilo boton
+        #estilos botones
         estilo_boton = """                                   
             QPushButton { 
                 color: white; 
@@ -119,11 +133,14 @@ class PantallaPreguntas(QWidget):
             }
         """
 
+        estilo_finalizar = estilo_boton.replace("black", "#1E5631").replace("rgba(71, 70, 70, 0.7)", "#3A9D5A")    
+
         #Boton atrás
         self.boton_atras = QPushButton("Atrás")
         self.boton_atras.setFont(QFont("Arial", 12))
         self.boton_atras.setStyleSheet(estilo_boton)
         self.boton_atras.setFixedSize(150,50)
+        self.boton_atras.hide()  # Ocultar el botón atrás inicialmente
 
         #Boton siguiente
         self.boton_siguiente = QPushButton("Siguiente")
@@ -131,10 +148,18 @@ class PantallaPreguntas(QWidget):
         self.boton_siguiente.setStyleSheet(estilo_boton)    
         self.boton_siguiente.setFixedSize(150,50)   
 
+        #boton finalizar
+        self.boton_finalizar = QPushButton("Finalizar")
+        self.boton_finalizar.setFont(QFont("Arial", 12))
+        self.boton_finalizar.setStyleSheet(estilo_finalizar)
+        self.boton_finalizar.setFixedSize(150,50)
+        self.boton_finalizar.hide()  # Ocultar el botón finalizar inicialmente
+
         # Añadir los botones al layout de botones
         self.botones_layout.addWidget(self.boton_atras)
         self.botones_layout.addStretch(1)
-        self.botones_layout.addWidget(self.boton_siguiente) 
+        self.botones_layout.addWidget(self.boton_siguiente)
+        self.botones_layout.addWidget(self.boton_finalizar)
         self.botones_layout.addStretch(1)        
 
         principal_layout.addStretch(1)
@@ -142,8 +167,11 @@ class PantallaPreguntas(QWidget):
 
         # ------------------- 6. Conexiones de botones ------------------- 
         self.boton_voz.clicked.connect(self.cambiar_color_voz)
+        self.boton_atras.clicked.connect(self.ir_pregunta_atras)
+        self.boton_siguiente.clicked.connect(self.ir_pregunta_siguiente)
+        self.boton_finalizar.clicked.connect(self.finalizar_entrevista)
 
-        # Añadir el widgets al layout principal
+        # ------------------- 7. Añadir el widgets al layout principal -------------------
         principal_layout.addWidget(self.pregunta_widget)
         principal_layout.addSpacing(20)
         principal_layout.addWidget(self.texto_pregunta)
@@ -157,6 +185,9 @@ class PantallaPreguntas(QWidget):
         
         principal_layout.addStretch(2)
 
+    # ------------------- 8. Funciones -------------------
+
+    #Cambiar color del botón de voz al grabar
     def cambiar_color_voz(self):           
         grabando_ahora = self.boton_voz.property("estado_grabando")
             
@@ -168,3 +199,62 @@ class PantallaPreguntas(QWidget):
             
         # Forzar la actualización del estilo
         self.boton_voz.style().polish(self.boton_voz)
+
+    def cargar_pregunta(self):
+        self.titulo_pregunta.setText("Pregunta "+ str(self.numero_pregunta) + " :")
+        self.texto_pregunta.setText(self.texto_pregunta_content[self.numero_pregunta - 1])
+
+    # Ir a la pregunta anterior
+    def ir_pregunta_atras(self):
+        # Guardar la respuesta actual
+        self.lista_respuestas[self.numero_pregunta-1] = self.respuesta_widget.toPlainText()
+
+        self.numero_pregunta = self.numero_pregunta - 1
+
+        if self.numero_pregunta == 1:
+            self.boton_atras.hide()
+        else:
+            self.boton_atras.show()        
+
+        # Cargar la respuesta guardada si existe
+        if(self.lista_respuestas[self.numero_pregunta - 1] != ""):
+            self.respuesta_widget.setText(self.lista_respuestas[self.numero_pregunta - 1]) 
+        else:
+            self.respuesta_widget.clear() 
+
+        self.cargar_pregunta()   
+
+    def ir_pregunta_siguiente(self):
+        # Guardar la respuesta actual
+        self.lista_respuestas[self.numero_pregunta-1] = self.respuesta_widget.toPlainText()
+
+        self.numero_pregunta = self.numero_pregunta + 1
+
+        if self.numero_pregunta > 1:
+            self.boton_atras.show()
+
+        if self.numero_pregunta == 10:
+            self.boton_siguiente.hide()
+            self.boton_finalizar.show()
+        else:
+            self.boton_siguiente.show()
+            self.boton_finalizar.hide()
+    
+        # Cargar la respuesta guardada si existe
+        if(self.lista_respuestas[self.numero_pregunta - 1] != ""):
+            self.respuesta_widget.setText(self.lista_respuestas[self.numero_pregunta - 1]) 
+        else:
+            self.respuesta_widget.clear() 
+
+        self.cargar_pregunta()    
+
+    def finalizar_entrevista(self):
+        # Guardar la respuesta actual
+        self.lista_respuestas[self.numero_pregunta] = self.respuesta_widget.toPlainText()
+
+        #Guardar info en base de datos
+
+        # Señal para pasar a la pantalla de resumen
+        self.entrevista_finalizada.emit()
+
+
